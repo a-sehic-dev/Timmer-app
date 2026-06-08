@@ -167,6 +167,8 @@
     max-height: 520px;
     padding: 20px 24px 32px;
     margin-top: 8px;
+    position: relative;
+    z-index: 20;
   }
 
   .panel-section {
@@ -201,6 +203,13 @@
     font-weight: 500;
     text-align: center;
     outline: none;
+    user-select: text;
+    -webkit-user-select: text;
+    touch-action: manipulation;
+    cursor: text;
+  }
+  .input-row input:focus {
+    box-shadow: 0 0 0 2px #FF9500;
   }
   .input-row span {
     margin-left: 8px;
@@ -298,12 +307,12 @@
     <div class="panel-section">Setup</div>
     <div class="input-row">
       <label>Actual Duration</label>
-      <input type="number" id="actualInput" value="60" min="1">
+      <input type="number" id="actualInput" value="60" min="1" inputmode="numeric">
       <span>min</span>
     </div>
     <div class="input-row">
       <label>Display Time</label>
-      <input type="number" id="displayInput" value="30" min="1">
+      <input type="number" id="displayInput" value="30" min="1" inputmode="numeric">
       <span>min</span>
     </div>
 
@@ -357,6 +366,9 @@ function togglePanel(force) {
   toggle.classList.toggle('open', open);
   toggle.textContent = open ? '▼ Hide Setup & Stats' : '▲ Setup & Stats';
   overlay.classList.toggle('show', open);
+  if (open) {
+    setTimeout(() => document.getElementById('actualInput').focus(), 300);
+  }
 }
 
 function mainAction() {
