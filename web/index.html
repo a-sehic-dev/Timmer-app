@@ -108,11 +108,35 @@
     color: #FF9500;
   }
 
+  .home-adjust {
+    display: flex;
+    justify-content: center;
+    gap: 80px;
+    padding: 8px 0 4px;
+  }
+  .adjust-btn {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    border: none;
+    font-size: 28px;
+    font-weight: 400;
+    cursor: pointer;
+    background: #1c1c1e;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .adjust-btn.plus { color: #FF9500; }
+  .adjust-btn.minus { color: #ff453a; }
+  .adjust-btn:disabled { opacity: 0.2; cursor: not-allowed; }
+  .adjust-btn:active:not(:disabled) { opacity: 0.6; }
+
   .main-actions {
     display: flex;
     justify-content: center;
     gap: 56px;
-    padding: 24px 0 16px;
+    padding: 16px 0 24px;
   }
   .action-btn {
     width: 80px;
@@ -141,18 +165,6 @@
     color: #000;
     font-weight: 500;
   }
-
-  .panel-toggle {
-    text-align: center;
-    padding: 8px;
-    color: #636366;
-    font-size: 13px;
-    cursor: pointer;
-    border: none;
-    background: none;
-    width: 100%;
-  }
-  .panel-toggle.open { color: #FF9500; }
 
   .panel {
     max-height: 0;
@@ -296,18 +308,21 @@
     </div>
   </div>
 
+  <div class="home-adjust">
+    <button class="adjust-btn plus" id="btnPlus" onclick="addTime()" disabled>+</button>
+    <button class="adjust-btn minus" id="btnMinus" onclick="reduceTime()" disabled>−</button>
+  </div>
+
   <div class="main-actions">
     <button class="action-btn btn-cancel" id="btnCancel" onclick="cancelTimer()" disabled>Cancel</button>
     <button class="action-btn btn-primary" id="btnMain" onclick="mainAction()">Start</button>
   </div>
 
-  <button class="panel-toggle" id="panelToggle" onclick="togglePanel()">▲ Setup &amp; Stats</button>
-
   <div class="panel" id="panel">
     <div class="panel-section">Setup</div>
     <div class="input-row">
       <label>Actual Duration</label>
-      <input type="number" id="actualInput" value="60" min="1" inputmode="numeric">
+      <input type="number" id="actualInput" value="45" min="1" inputmode="numeric">
       <span>min</span>
     </div>
     <div class="input-row">
@@ -320,11 +335,6 @@
     <div class="stat-row"><span>Actual Remaining</span><span id="dispActual">00:00</span></div>
     <div class="stat-row"><span>Speed</span><span id="dispSpeed">1.000x</span></div>
 
-    <div class="panel-section">Adjust</div>
-    <div class="ctrl-row">
-      <button class="ctrl-btn plus" id="btnPlus" onclick="addTime()" disabled>+</button>
-      <button class="ctrl-btn minus" id="btnMinus" onclick="reduceTime()" disabled>−</button>
-    </div>
     <div class="panel-hint">
       [+] Display +1 min, Actual +2 min<br>
       [−] Display −1 min, Actual unchanged
@@ -359,12 +369,9 @@ function updateUI() {
 
 function togglePanel(force) {
   const panel = document.getElementById('panel');
-  const toggle = document.getElementById('panelToggle');
   const overlay = document.getElementById('overlay');
   const open = typeof force === 'boolean' ? force : !panel.classList.contains('open');
   panel.classList.toggle('open', open);
-  toggle.classList.toggle('open', open);
-  toggle.textContent = open ? '▼ Hide Setup & Stats' : '▲ Setup & Stats';
   overlay.classList.toggle('show', open);
   if (open) {
     setTimeout(() => document.getElementById('actualInput').focus(), 300);
