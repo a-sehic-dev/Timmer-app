@@ -5,3 +5,7 @@ dist/
 *.exe
 *.zip
 .DS_Store
+.vercel/
+UPWORK_MESSAGE.txt
+GITHUB_PAGES_SETUP.txt
+VERCEL_DEPLOY.txt

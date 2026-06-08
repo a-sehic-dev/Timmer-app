@@ -2,7 +2,15 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#e94560">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Timer">
+<link rel="manifest" href="/manifest.json">
+<link rel="icon" href="/icon-192.png">
+<link rel="apple-touch-icon" href="/icon-512.png">
 <title>Adjustable Speed Timer</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -173,9 +181,13 @@
 </head>
 <body class="noselect">
 
+  <div id="installBar" style="display:none;background:#e94560;color:#fff;padding:10px 14px;border-radius:12px;width:100%;max-width:380px;margin-bottom:10px;font-size:13px;text-align:center;">
+    Install as app: tap <b>⋮</b> → <b>Install app</b> or <b>Add to Home screen</b>
+  </div>
+
   <div class="header">
     <h1>⏱ Adjustable Speed Timer</h1>
-    <span>v1.0 · Web App</span>
+    <span>v1.0 · Installable App</span>
   </div>
 
   <!-- SETUP -->
@@ -324,6 +336,18 @@ function stopControls() {
 }
 
 updateUI();
+
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js').catch(() => {});
+}
+
+// Show install hint on mobile
+if (window.matchMedia('(display-mode: browser)').matches) {
+  document.getElementById('installBar').style.display = 'block';
+}
+window.addEventListener('beforeinstallprompt', () => {
+  document.getElementById('installBar').style.display = 'block';
+});
 </script>
 </body>
 </html>

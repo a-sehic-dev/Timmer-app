@@ -4,11 +4,15 @@
 
 OPTION A — OPEN THE LINK (easiest)
 -----------------------------------
-If Sedin sent you a link (GitHub Pages), open it in Safari on your iPhone:
+Open this link in Safari on your iPhone:
 
-  https://a-sehic-dev.github.io/Timmer-app/
+  https://web-a-sehic-devs-projects.vercel.app
 
-Then tap Share → "Add to Home Screen" for an app-like icon.
+INSTALL AS APP (no URL bar after install):
+  Android/Samsung Chrome: ⋮ menu → "Install app" or "Add to Home screen"
+  iPhone Safari: Share → "Add to Home Screen"
+
+After install, open the icon on your home screen — runs like a real app.
 
 
 OPTION B — OPEN THE HTML FILE
