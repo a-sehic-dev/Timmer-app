@@ -348,6 +348,9 @@ const RING_LEN = 2 * Math.PI * 90;
 let actualLeft = 0, displayLeft = 0, displayTotal = 0, speed = 1.0;
 let running = false, paused = false, lastTime = 0, animId = null;
 let audioCtx = null;
+let alarmActive = false;
+let alarmInterval = null;
+let alarmVibrateInterval = null;
 
 function initAudio() {
   try {
@@ -358,26 +361,55 @@ function initAudio() {
   } catch (e) {}
 }
 
-function playCompleteSound() {
+function playBeep() {
   try {
     initAudio();
     const ctx = audioCtx;
     if (!ctx) return;
-    for (let i = 0; i < 3; i++) {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.frequency.value = 1050;
-      osc.type = 'sine';
-      const t = ctx.currentTime + i * 0.4;
-      gain.gain.setValueAtTime(0.35, t);
-      gain.gain.exponentialRampToValueAtTime(0.01, t + 0.35);
-      osc.start(t);
-      osc.stop(t + 0.35);
-    }
-    if (navigator.vibrate) navigator.vibrate([200, 100, 200, 100, 200]);
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.frequency.value = 1050;
+    osc.type = 'sine';
+    const t = ctx.currentTime;
+    gain.gain.setValueAtTime(0.35, t);
+    gain.gain.exponentialRampToValueAtTime(0.01, t + 0.4);
+    osc.start(t);
+    osc.stop(t + 0.4);
   } catch (e) {}
+}
+
+function stopAlarmSound() {
+  alarmActive = false;
+  if (alarmInterval) { clearInterval(alarmInterval); alarmInterval = null; }
+  if (alarmVibrateInterval) { clearInterval(alarmVibrateInterval); alarmVibrateInterval = null; }
+  try { if (navigator.vibrate) navigator.vibrate(0); } catch (e) {}
+}
+
+function startAlarm() {
+  stopAlarmSound();
+  alarmActive = true;
+  playBeep();
+  alarmInterval = setInterval(() => { if (alarmActive) playBeep(); }, 1200);
+  if (navigator.vibrate) {
+    navigator.vibrate([300, 200, 300]);
+    alarmVibrateInterval = setInterval(() => {
+      if (alarmActive) navigator.vibrate([300, 200, 300]);
+    }, 1500);
+  }
+  document.getElementById('btnCancel').disabled = false;
+  document.getElementById('btnMain').textContent = 'Stop';
+  document.getElementById('btnMain').classList.add('running');
+}
+
+function dismissAlarm() {
+  stopAlarmSound();
+  document.getElementById('dispDisplay').textContent = '00:00';
+  document.getElementById('dispDisplay').classList.remove('done');
+  document.getElementById('status').textContent = 'Tap Start to run again';
+  resetControls();
+  updateUI();
 }
 
 function fmt(seconds) {
@@ -411,12 +443,14 @@ function togglePanel(force) {
 }
 
 function mainAction() {
+  if (alarmActive) { dismissAlarm(); return; }
   if (!running) startTimer();
   else if (paused) resumeTimer();
   else pauseTimer();
 }
 
 function startTimer() {
+  stopAlarmSound();
   if (running) return;
   const actualMin = parseInt(document.getElementById('actualInput').value);
   const displayMin = parseInt(document.getElementById('displayInput').value);
@@ -481,10 +515,10 @@ function tick() {
     paused = false;
     document.getElementById('dispDisplay').textContent = 'Done';
     document.getElementById('dispDisplay').classList.add('done');
-    document.getElementById('status').textContent = 'Complete';
+    document.getElementById('status').textContent = 'Complete — tap Stop or Cancel';
     resetControls();
     updateUI();
-    playCompleteSound();
+    startAlarm();
     return;
   }
 
@@ -515,6 +549,7 @@ function recalcSpeed() {
 }
 
 function cancelTimer() {
+  stopAlarmSound();
   running = false;
   paused = false;
   if (animId) cancelAnimationFrame(animId);

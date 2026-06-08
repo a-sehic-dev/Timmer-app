@@ -1,4 +1,4 @@
-const CACHE = 'timer-v6';
+const CACHE = 'timer-v7';
 
 self.addEventListener('install', () => self.skipWaiting());
 
