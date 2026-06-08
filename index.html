@@ -347,6 +347,38 @@
 const RING_LEN = 2 * Math.PI * 90;
 let actualLeft = 0, displayLeft = 0, displayTotal = 0, speed = 1.0;
 let running = false, paused = false, lastTime = 0, animId = null;
+let audioCtx = null;
+
+function initAudio() {
+  try {
+    if (!audioCtx) {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+  } catch (e) {}
+}
+
+function playCompleteSound() {
+  try {
+    initAudio();
+    const ctx = audioCtx;
+    if (!ctx) return;
+    for (let i = 0; i < 3; i++) {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.frequency.value = 1050;
+      osc.type = 'sine';
+      const t = ctx.currentTime + i * 0.4;
+      gain.gain.setValueAtTime(0.35, t);
+      gain.gain.exponentialRampToValueAtTime(0.01, t + 0.35);
+      osc.start(t);
+      osc.stop(t + 0.35);
+    }
+    if (navigator.vibrate) navigator.vibrate([200, 100, 200, 100, 200]);
+  } catch (e) {}
+}
 
 function fmt(seconds) {
   const m = Math.floor(Math.max(0, seconds) / 60);
@@ -411,6 +443,7 @@ function startTimer() {
   document.getElementById('dispDisplay').classList.remove('done');
   document.getElementById('status').textContent = 'Running';
   togglePanel(false);
+  initAudio();
 
   tick();
 }
@@ -451,6 +484,7 @@ function tick() {
     document.getElementById('status').textContent = 'Complete';
     resetControls();
     updateUI();
+    playCompleteSound();
     return;
   }
 
