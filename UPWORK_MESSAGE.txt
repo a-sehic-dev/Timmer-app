@@ -1,0 +1,29 @@
+Hi! Updated delivery attached: TimerApp_Delivery.zip
+
+Now includes BOTH versions:
+• TimerApp.exe — Windows PC (double-click to run)
+• TimerWeb_iOS.html — iPhone/iPad (open in Safari)
+
+For iPhone, easiest way — open this link in Safari:
+https://a-sehic-dev.github.io/Timmer-app/
+
+Then tap Share → "Add to Home Screen" for an app-like icon.
+
+Same logic on both versions:
+- Set Actual Duration + Display Time
+- Display counts down over actual duration
+- Speed auto-calculates (Display ÷ Actual)
+- [+] adds 1 min display / 2 min actual
+- [−] removes 1 min display only
+- Speed recalculates instantly
+
+README.txt and README_iOS.txt included with step-by-step instructions.
+INTEGRATION.txt has Swift code if you want a native iOS app later.
+
+Please test on your iPhone and let me know if everything works.
+If you'd like any changes, I'm happy to adjust.
+
+When you're ready, please send the contract offer so we're covered on Upwork.
+If you're happy with the work, I'd really appreciate your feedback — thanks!
+
+Sedin
