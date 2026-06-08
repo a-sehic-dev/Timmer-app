@@ -1,11 +1,11 @@
 {
-  "name": "Adjustable Speed Timer",
+  "name": "Timer",
   "short_name": "Timer",
-  "description": "Display time counts down over actual duration with adjustable speed",
+  "description": "Adjustable speed timer",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0f0f1a",
-  "theme_color": "#e94560",
+  "background_color": "#000000",
+  "theme_color": "#000000",
   "orientation": "portrait",
   "icons": [
     {
