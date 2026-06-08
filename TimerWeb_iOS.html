@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Adjustable Speed Timer</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    background: #0f0f1a;
+    color: #eaeaea;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px 16px;
+  }
+  .header {
+    text-align: center;
+    margin-bottom: 16px;
+  }
+  .header h1 { font-size: 20px; font-weight: 700; color: #e94560; }
+  .header span { font-size: 11px; color: #a0a0b0; }
+
+  /* Card style */
+  .card {
+    background: #1a1a2e;
+    border-radius: 16px;
+    width: 100%;
+    max-width: 380px;
+    padding: 16px 18px;
+    margin-bottom: 12px;
+    border: 1px solid #2a2a40;
+  }
+  .card-title {
+    font-size: 10px;
+    font-weight: 700;
+    color: #e94560;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 12px;
+  }
+
+  /* Inputs */
+  .input-row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  .input-row label {
+    flex: 1;
+    font-size: 14px;
+    color: #eaeaea;
+  }
+  .input-row input {
+    width: 70px;
+    padding: 8px;
+    border-radius: 10px;
+    border: 1px solid #2a2a40;
+    background: #0f0f1a;
+    color: #00d9a5;
+    font-size: 16px;
+    font-weight: 700;
+    text-align: center;
+    outline: none;
+  }
+  .input-row span {
+    margin-left: 6px;
+    font-size: 12px;
+    color: #a0a0b0;
+  }
+
+  /* Buttons */
+  .btn {
+    border: none;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 700;
+    padding: 14px 28px;
+    cursor: pointer;
+    transition: opacity 0.2s;
+    -webkit-touch-callout: none;
+  }
+  .btn:active { opacity: 0.7; }
+  .btn-start {
+    background: #e94560;
+    color: white;
+    width: 100%;
+    margin-top: 6px;
+  }
+  .btn-ctrl {
+    flex: 1;
+    font-size: 22px;
+    padding: 16px;
+  }
+  .btn-plus { background: #00d9a5; color: #0f0f1a; }
+  .btn-minus { background: #e94560; color: white; }
+  .btn-stop { background: #555; color: white; }
+  .btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+  }
+
+  /* Timer display */
+  .timer-display {
+    text-align: center;
+    padding: 8px 0;
+  }
+  .timer-big {
+    font-size: 52px;
+    font-weight: 800;
+    color: #4d8af0;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.1;
+  }
+  .timer-label {
+    font-size: 9px;
+    color: #a0a0b0;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-top: 2px;
+  }
+  .timer-actual {
+    font-size: 14px;
+    color: #a0a0b0;
+    margin-top: 8px;
+  }
+  .timer-speed {
+    font-size: 18px;
+    font-weight: 700;
+    color: #f5c542;
+    margin-top: 6px;
+  }
+
+  /* Controls row */
+  .controls-row {
+    display: flex;
+    gap: 10px;
+    margin-top: 4px;
+  }
+
+  /* Legend */
+  .legend {
+    font-size: 11px;
+    color: #a0a0b0;
+    margin-top: 8px;
+    line-height: 1.5;
+  }
+
+  /* Status */
+  .status {
+    text-align: center;
+    font-size: 11px;
+    color: #a0a0b0;
+    margin-top: 8px;
+    min-height: 16px;
+  }
+
+  /* Done animation */
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+  }
+  .done { color: #00d9a5; animation: pulse 1s infinite; }
+
+  /* Prevent text selection */
+  .noselect {
+    -webkit-user-select: none;
+    user-select: none;
+  }
+</style>
+</head>
+<body class="noselect">
+
+  <div class="header">
+    <h1>⏱ Adjustable Speed Timer</h1>
+    <span>v1.0 · Web App</span>
+  </div>
+
+  <!-- SETUP -->
+  <div class="card">
+    <div class="card-title">Setup</div>
+    <div class="input-row">
+      <label>Actual Duration</label>
+      <input type="number" id="actualInput" value="60" min="1">
+      <span>min</span>
+    </div>
+    <div class="input-row">
+      <label>Display Time</label>
+      <input type="number" id="displayInput" value="30" min="1">
+      <span>min</span>
+    </div>
+    <button class="btn btn-start" id="btnStart" onclick="startTimer()">▶ START TIMER</button>
+  </div>
+
+  <!-- TIMER -->
+  <div class="card">
+    <div class="card-title">Timer</div>
+    <div class="timer-display">
+      <div class="timer-big" id="dispDisplay">00:00</div>
+      <div class="timer-label">Display Time</div>
+      <div class="timer-actual" id="dispActual">Actual: 00:00</div>
+      <div class="timer-speed" id="dispSpeed">Speed: 1.000x</div>
+    </div>
+  </div>
+
+  <!-- CONTROLS -->
+  <div class="card">
+    <div class="card-title">Controls</div>
+    <div class="controls-row">
+      <button class="btn btn-ctrl btn-plus" id="btnPlus" onclick="addTime()" disabled>+</button>
+      <button class="btn btn-ctrl btn-minus" id="btnMinus" onclick="reduceTime()" disabled>−</button>
+      <button class="btn btn-ctrl btn-stop" id="btnStop" onclick="stopTimer()" disabled>⏹</button>
+    </div>
+    <div class="legend">
+      [+] Display +1min, Actual +2min<br>
+      [−] Display −1min, Actual unchanged
+    </div>
+    <div class="status" id="status">Ready — Set times and tap Start</div>
+  </div>
+
+<script>
+let actualLeft = 0, displayLeft = 0, speed = 1.0;
+let running = false, lastTime = 0, animId = null;
+
+function fmt(seconds) {
+  const m = Math.floor(Math.max(0, seconds) / 60);
+  const s = Math.floor(Math.max(0, seconds) % 60);
+  return String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+}
+
+function updateUI() {
+  document.getElementById('dispDisplay').textContent = fmt(displayLeft);
+  document.getElementById('dispActual').textContent = 'Actual: ' + fmt(actualLeft);
+  document.getElementById('dispSpeed').textContent = 'Speed: ' + speed.toFixed(3) + 'x';
+}
+
+function startTimer() {
+  if (running) return;
+  const actualMin = parseInt(document.getElementById('actualInput').value);
+  const displayMin = parseInt(document.getElementById('displayInput').value);
+  if (!actualMin || !displayMin || actualMin <= 0 || displayMin <= 0) {
+    document.getElementById('status').textContent = 'Enter positive numbers';
+    return;
+  }
+  actualLeft = actualMin * 60;
+  displayLeft = displayMin * 60;
+  speed = displayLeft / actualLeft;
+  running = true;
+  lastTime = performance.now();
+
+  document.getElementById('actualInput').disabled = true;
+  document.getElementById('displayInput').disabled = true;
+  document.getElementById('btnStart').disabled = true;
+  document.getElementById('btnPlus').disabled = false;
+  document.getElementById('btnMinus').disabled = false;
+  document.getElementById('btnStop').disabled = false;
+  document.getElementById('dispDisplay').classList.remove('done');
+  document.getElementById('status').textContent = 'Timer running — Tap + or −';
+
+  tick();
+}
+
+function tick() {
+  if (!running) return;
+  const now = performance.now();
+  const dt = (now - lastTime) / 1000;
+  lastTime = now;
+
+  actualLeft -= dt;
+  displayLeft -= dt * speed;
+
+  if (actualLeft <= 0 || displayLeft <= 0) {
+    actualLeft = Math.max(0, actualLeft);
+    displayLeft = Math.max(0, displayLeft);
+    running = false;
+    document.getElementById('dispDisplay').textContent = 'DONE!';
+    document.getElementById('dispDisplay').classList.add('done');
+    document.getElementById('status').textContent = '✓ Timer complete!';
+    stopControls();
+    return;
+  }
+
+  updateUI();
+  animId = requestAnimationFrame(tick);
+}
+
+function addTime() {
+  if (!running) return;
+  displayLeft += 60;
+  actualLeft += 120;
+  recalcSpeed();
+  document.getElementById('status').textContent = '[+] Added — Speed: ' + speed.toFixed(3) + 'x';
+  updateUI();
+}
+
+function reduceTime() {
+  if (!running) return;
+  displayLeft = Math.max(0, displayLeft - 60);
+  recalcSpeed();
+  document.getElementById('status').textContent = '[−] Reduced — Speed: ' + speed.toFixed(3) + 'x';
+  updateUI();
+}
+
+function recalcSpeed() {
+  if (actualLeft > 0) speed = displayLeft / actualLeft;
+}
+
+function stopTimer() {
+  running = false;
+  if (animId) cancelAnimationFrame(animId);
+  stopControls();
+  document.getElementById('status').textContent = 'Timer stopped — Tap Start to run again';
+}
+
+function stopControls() {
+  document.getElementById('actualInput').disabled = false;
+  document.getElementById('displayInput').disabled = false;
+  document.getElementById('btnStart').disabled = false;
+  document.getElementById('btnPlus').disabled = true;
+  document.getElementById('btnMinus').disabled = true;
+  document.getElementById('btnStop').disabled = true;
+}
+
+updateUI();
+</script>
+</body>
+</html>

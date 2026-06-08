@@ -8,8 +8,9 @@ class PremiumTimerApp:
     def __init__(self, root):
         self.root = root
         self.root.title("Adjustable Speed Timer")
+        self.root.geometry("480x580")
         self.root.configure(bg="#1a1a2e")
-        self.root.resizable(True, False)
+        self.root.resizable(False, False)
 
         # Colors
         self.bg_dark = "#1a1a2e"
@@ -32,10 +33,6 @@ class PremiumTimerApp:
         self.lock = threading.Lock()
 
         self.build_ui()
-        self.root.update_idletasks()
-        height = self.root.winfo_reqheight() + 50
-        self.root.geometry(f"480x{height}")
-        self.root.minsize(480, height)
 
     def build_ui(self):
         # ===== HEADER =====
