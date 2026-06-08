@@ -1,0 +1,213 @@
+========================================
+  iOS INTEGRATION GUIDE (Swift)
+  Adjustable Speed Timer — Logic Bridge
+========================================
+
+This note shows how to port the same timer logic from the
+Windows app (TimerApp.exe) into an iOS app using Timer and,
+optionally, URLSession for server sync.
+
+
+CORE LOGIC (same as the .exe)
+------------------------------
+All values are in SECONDS internally.
+
+On START:
+  actualLeft   = actualMinutes * 60
+  displayLeft  = displayMinutes * 60
+  speed        = displayLeft / actualLeft
+
+On each TICK (every ~0.05s, or use CADisplayLink / Timer):
+  actualLeft  -= deltaTime
+  displayLeft -= deltaTime * speed
+
+  Stop when actualLeft <= 0 OR displayLeft <= 0
+
+On [+] button:
+  displayLeft += 60      // +1 minute display
+  actualLeft  += 120     // +2 minutes actual
+  speed = displayLeft / actualLeft
+
+On [-] button:
+  displayLeft = max(0, displayLeft - 60)   // -1 minute display only
+  speed = displayLeft / actualLeft
+
+Speed always = displayLeft / actualLeft  (auto-adjusts instantly)
+
+
+SWIFT CLASS — DROP-IN LOGIC
+----------------------------
+Copy this into your Xcode project and wire it to your UI labels.
+
+```swift
+import Foundation
+
+final class AdjustableSpeedTimer {
+
+    private(set) var actualLeft: Double = 0
+    private(set) var displayLeft: Double = 0
+    private(set) var speed: Double = 1.0
+    private(set) var isRunning = false
+
+    private var timer: Timer?
+    var onUpdate: ((Double, Double, Double) -> Void)?   // display, actual, speed
+    var onComplete: (() -> Void)?
+
+    func start(actualMinutes: Int, displayMinutes: Int) {
+        guard actualMinutes > 0, displayMinutes > 0 else { return }
+        actualLeft  = Double(actualMinutes * 60)
+        displayLeft = Double(displayMinutes * 60)
+        speed = displayLeft / actualLeft
+        isRunning = true
+
+        timer?.invalidate()
+        timer = Timer.scheduledTimer(withTimeInterval: 0.05, repeats: true) { [weak self] _ in
+            self?.tick(delta: 0.05)
+        }
+        RunLoop.main.add(timer!, forMode: .common)
+    }
+
+    private func tick(delta: Double) {
+        guard isRunning, actualLeft > 0, displayLeft > 0 else { return }
+
+        actualLeft  -= delta
+        displayLeft -= delta * speed
+
+        if actualLeft <= 0 || displayLeft <= 0 {
+            actualLeft  = max(0, actualLeft)
+            displayLeft = max(0, displayLeft)
+            stop()
+            onComplete?()
+        }
+        onUpdate?(displayLeft, actualLeft, speed)
+    }
+
+    func addTime() {
+        guard isRunning else { return }
+        displayLeft += 60
+        actualLeft  += 120
+        recalcSpeed()
+        onUpdate?(displayLeft, actualLeft, speed)
+    }
+
+    func reduceTime() {
+        guard isRunning else { return }
+        displayLeft = max(0, displayLeft - 60)
+        recalcSpeed()
+        onUpdate?(displayLeft, actualLeft, speed)
+    }
+
+    private func recalcSpeed() {
+        if actualLeft > 0 {
+            speed = displayLeft / actualLeft
+        }
+    }
+
+    func stop() {
+        isRunning = false
+        timer?.invalidate()
+        timer = nil
+    }
+
+    static func format(_ seconds: Double) -> String {
+        let total = Int(seconds)
+        let m = total / 60
+        let s = total % 60
+        return String(format: "%02d:%02d", m, s)
+    }
+}
+```
+
+
+HOOK UP TO SWIFTUI (minimal example)
+-------------------------------------
+```swift
+@StateObject private var engine = AdjustableSpeedTimer()
+
+// In onAppear or start button:
+engine.onUpdate = { display, actual, speed in
+    displayText = AdjustableSpeedTimer.format(display)
+    actualText  = "Actual: \(AdjustableSpeedTimer.format(actual))"
+    speedText   = String(format: "Speed: %.3fx", speed)
+}
+engine.start(actualMinutes: 60, displayMinutes: 90)
+
+// Buttons:
+Button("+") { engine.addTime() }
+Button("−") { engine.reduceTime() }
+Button("Stop") { engine.stop() }
+```
+
+
+URLSession — WHEN TO USE IT
+---------------------------
+Use URLSession only if you need to:
+  - Sync timer state to a server / other devices
+  - Fetch initial actual/display values from an API
+  - Log timer events remotely
+
+The countdown itself should run locally with Timer (above).
+URLSession is NOT needed for the basic timer to work.
+
+Example: POST state after [+] or [-]:
+
+```swift
+func syncToServer(displayLeft: Double, actualLeft: Double, speed: Double) {
+    guard let url = URL(string: "https://your-api.com/timer/update") else { return }
+    var request = URLRequest(url: url)
+    request.httpMethod = "POST"
+    request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+
+    let body: [String: Any] = [
+        "displayLeft": displayLeft,
+        "actualLeft": actualLeft,
+        "speed": speed
+    ]
+    request.httpBody = try? JSONSerialization.data(withJSONObject: body)
+
+    URLSession.shared.dataTask(with: request).resume()
+}
+```
+
+Call syncToServer() inside addTime(), reduceTime(), and onComplete().
+
+
+BACKGROUND / LOCK SCREEN NOTE
+------------------------------
+iOS may pause Timer when the app is backgrounded. Options:
+  1. Store startDate (Date()) + total durations, recalculate on foreground
+  2. Use BGTaskScheduler for limited background refresh
+  3. For precise countdown while locked, consider a server-side clock
+
+Date-based approach (recommended):
+
+```swift
+private var startedAt = Date()
+private var initialActual: Double = 0
+private var initialDisplay: Double = 0
+
+// On resume from background:
+func refreshFromWallClock() {
+    let elapsed = Date().timeIntervalSince(startedAt)
+    actualLeft  = max(0, initialActual - elapsed)
+    displayLeft = max(0, initialDisplay - elapsed * speed)
+}
+```
+
+
+MAPPING: Python app  →  iOS
+---------------------------
+TimerApp.exe (Python)          iOS equivalent
+─────────────────────────────────────────────────
+threading + time.sleep(0.05)   Timer.scheduledTimer(0.05)
+threading.Lock()                 DispatchQueue / @MainActor
+tkinter labels                   SwiftUI Text / UILabel
+root.after(0, update_ui)         onUpdate callback on main queue
+
+The math is identical — port the class above and connect your UI.
+
+
+QUESTIONS?
+----------
+Reply on Upwork if you want help wiring this into a specific
+Xcode project or API endpoint.
