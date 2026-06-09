@@ -2,7 +2,14 @@
   iPHONE & ANDROID — Instructions
 ========================================
 
-BEST WAY — USE THE LINK (recommended)
+ANDROID — USE THE APK (recommended for Android)
+------------------------------------------------
+Install TimerApp.apk from this ZIP — fully offline, real app icon.
+Gmail blocks APK files — use Google Drive, USB, or Telegram.
+Full step-by-step guide: README_ANDROID.txt
+
+
+iPHONE — USE THE LINK (recommended)
 --------------------------------------
 Open in Safari (iPhone) or Chrome (Android/Samsung):
 

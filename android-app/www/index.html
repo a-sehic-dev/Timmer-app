@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Timer">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-512.png">
+<title>Timer</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    background: #000;
+    color: #fff;
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', sans-serif;
+    min-height: 100vh;
+    min-height: 100dvh;
+    overflow: hidden;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  .app {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    min-height: 100dvh;
+    max-width: 430px;
+    margin: 0 auto;
+    padding: env(safe-area-inset-top) 20px env(safe-area-inset-bottom);
+  }
+
+  .topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 4px 8px;
+  }
+  .topbar h1 {
+    font-size: 17px;
+    font-weight: 600;
+    color: #FF9500;
+    letter-spacing: -0.3px;
+  }
+  .btn-gear {
+    width: 44px;
+    height: 44px;
+    border: none;
+    background: transparent;
+    color: #FF9500;
+    font-size: 22px;
+    border-radius: 50%;
+    cursor: pointer;
+  }
+  .btn-gear:active { opacity: 0.5; }
+
+  .timer-stage {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    min-height: 280px;
+  }
+
+  .ring-wrap {
+    position: relative;
+    width: 280px;
+    height: 280px;
+  }
+  .ring-wrap svg {
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);
+  }
+  .ring-bg {
+    fill: none;
+    stroke: #2c2c2e;
+    stroke-width: 6;
+  }
+  .ring-progress {
+    fill: none;
+    stroke: #FF9500;
+    stroke-width: 6;
+    stroke-linecap: round;
+    transition: stroke-dashoffset 0.1s linear;
+  }
+
+  .timer-digits {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 64px;
+    font-weight: 200;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -2px;
+    color: #fff;
+  }
+  .timer-digits.done {
+    font-size: 36px;
+    font-weight: 500;
+    color: #FF9500;
+  }
+
+  .home-adjust {
+    display: flex;
+    justify-content: center;
+    gap: 80px;
+    padding: 8px 0 4px;
+  }
+  .adjust-btn {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    border: none;
+    font-size: 28px;
+    font-weight: 400;
+    cursor: pointer;
+    background: #1c1c1e;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .adjust-btn.plus { color: #FF9500; }
+  .adjust-btn.minus { color: #ff453a; }
+  .adjust-btn:disabled { opacity: 0.2; cursor: not-allowed; }
+  .adjust-btn:active:not(:disabled) { opacity: 0.6; }
+
+  .main-actions {
+    display: flex;
+    justify-content: center;
+    gap: 56px;
+    padding: 16px 0 24px;
+  }
+  .action-btn {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    border: none;
+    font-size: 17px;
+    font-weight: 400;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .action-btn:active { opacity: 0.7; }
+  .action-btn:disabled { opacity: 0.25; cursor: not-allowed; }
+  .btn-cancel {
+    background: #1c1c1e;
+    color: #fff;
+  }
+  .btn-primary {
+    background: #2c2c2e;
+    color: #fff;
+  }
+  .btn-primary.running {
+    background: #FF9500;
+    color: #000;
+    font-weight: 500;
+  }
+
+  .panel {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.35s ease;
+    background: #1c1c1e;
+    border-radius: 16px 16px 0 0;
+    margin: 0 -20px;
+    padding: 0 24px;
+  }
+  .panel.open {
+    max-height: 520px;
+    padding: 20px 24px 32px;
+    margin-top: 8px;
+    position: relative;
+    z-index: 20;
+  }
+
+  .panel-section {
+    font-size: 11px;
+    font-weight: 600;
+    color: #636366;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 12px;
+    margin-top: 16px;
+  }
+  .panel-section:first-child { margin-top: 0; }
+
+  .input-row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+  .input-row label {
+    flex: 1;
+    font-size: 17px;
+    color: #fff;
+  }
+  .input-row input {
+    width: 72px;
+    padding: 10px;
+    border-radius: 10px;
+    border: none;
+    background: #2c2c2e;
+    color: #FF9500;
+    font-size: 17px;
+    font-weight: 500;
+    text-align: center;
+    outline: none;
+    user-select: text;
+    -webkit-user-select: text;
+    touch-action: manipulation;
+    cursor: text;
+  }
+  .input-row input:focus {
+    box-shadow: 0 0 0 2px #FF9500;
+  }
+  .input-row span {
+    margin-left: 8px;
+    font-size: 15px;
+    color: #636366;
+  }
+
+  .stat-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid #2c2c2e;
+    font-size: 17px;
+  }
+  .stat-row span:first-child { color: #8e8e93; }
+  .stat-row span:last-child {
+    font-variant-numeric: tabular-nums;
+    color: #fff;
+  }
+
+  .ctrl-row {
+    display: flex;
+    gap: 12px;
+    margin-top: 12px;
+  }
+  .ctrl-btn {
+    flex: 1;
+    height: 50px;
+    border: none;
+    border-radius: 12px;
+    font-size: 24px;
+    font-weight: 500;
+    cursor: pointer;
+    background: #2c2c2e;
+    color: #fff;
+  }
+  .ctrl-btn.plus { color: #FF9500; }
+  .ctrl-btn.minus { color: #ff453a; }
+  .ctrl-btn:disabled { opacity: 0.25; }
+  .ctrl-btn:active:not(:disabled) { opacity: 0.6; }
+
+  .panel-hint {
+    font-size: 12px;
+    color: #636366;
+    line-height: 1.5;
+    margin-top: 12px;
+  }
+  .status {
+    font-size: 13px;
+    color: #8e8e93;
+    text-align: center;
+    margin-top: 12px;
+    min-height: 18px;
+  }
+
+  .overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 10;
+  }
+  .overlay.show { display: block; }
+</style>
+</head>
+<body>
+
+<div class="overlay" id="overlay" onclick="togglePanel(false)"></div>
+
+<div class="app">
+  <div class="topbar">
+    <h1>Timer</h1>
+    <button class="btn-gear" onclick="togglePanel()" aria-label="Settings">⚙</button>
+  </div>
+
+  <div class="timer-stage">
+    <div class="ring-wrap">
+      <svg viewBox="0 0 200 200">
+        <circle class="ring-bg" cx="100" cy="100" r="90"/>
+        <circle class="ring-progress" id="ringProgress" cx="100" cy="100" r="90"
+          stroke-dasharray="565.49" stroke-dashoffset="0"/>
+      </svg>
+      <div class="timer-digits" id="dispDisplay">00:00</div>
+    </div>
+  </div>
+
+  <div class="home-adjust">
+    <button class="adjust-btn plus" id="btnPlus" onclick="addTime()" disabled>+</button>
+    <button class="adjust-btn minus" id="btnMinus" onclick="reduceTime()" disabled>−</button>
+  </div>
+
+  <div class="main-actions">
+    <button class="action-btn btn-cancel" id="btnCancel" onclick="cancelTimer()" disabled>Cancel</button>
+    <button class="action-btn btn-primary" id="btnMain" onclick="mainAction()">Start</button>
+  </div>
+
+  <div class="panel" id="panel">
+    <div class="panel-section">Setup</div>
+    <div class="input-row">
+      <label>Actual Duration</label>
+      <input type="number" id="actualInput" value="45" min="1" inputmode="numeric">
+      <span>min</span>
+    </div>
+    <div class="input-row">
+      <label>Display Time</label>
+      <input type="number" id="displayInput" value="30" min="1" inputmode="numeric">
+      <span>min</span>
+    </div>
+
+    <div class="panel-section">Stats</div>
+    <div class="stat-row"><span>Actual Remaining</span><span id="dispActual">00:00</span></div>
+    <div class="stat-row"><span>Speed</span><span id="dispSpeed">1.000x</span></div>
+
+    <div class="panel-hint">
+      [+] Display +1 min, Actual +2 min<br>
+      [−] Display −1 min, Actual unchanged
+    </div>
+    <div class="status" id="status">Set times and tap Start</div>
+  </div>
+</div>
+
+<script>
+const RING_LEN = 2 * Math.PI * 90;
+let actualLeft = 0, displayLeft = 0, displayTotal = 0, speed = 1.0;
+let running = false, paused = false, lastTime = 0, animId = null;
+let audioCtx = null;
+let alarmActive = false;
+let alarmInterval = null;
+let alarmVibrateInterval = null;
+
+function initAudio() {
+  try {
+    if (!audioCtx) {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+  } catch (e) {}
+}
+
+function playBeep() {
+  try {
+    initAudio();
+    const ctx = audioCtx;
+    if (!ctx) return;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.frequency.value = 1050;
+    osc.type = 'sine';
+    const t = ctx.currentTime;
+    gain.gain.setValueAtTime(0.35, t);
+    gain.gain.exponentialRampToValueAtTime(0.01, t + 0.4);
+    osc.start(t);
+    osc.stop(t + 0.4);
+  } catch (e) {}
+}
+
+function stopAlarmSound() {
+  alarmActive = false;
+  if (alarmInterval) { clearInterval(alarmInterval); alarmInterval = null; }
+  if (alarmVibrateInterval) { clearInterval(alarmVibrateInterval); alarmVibrateInterval = null; }
+  try { if (navigator.vibrate) navigator.vibrate(0); } catch (e) {}
+}
+
+function startAlarm() {
+  stopAlarmSound();
+  alarmActive = true;
+  playBeep();
+  alarmInterval = setInterval(() => { if (alarmActive) playBeep(); }, 1200);
+  if (navigator.vibrate) {
+    navigator.vibrate([300, 200, 300]);
+    alarmVibrateInterval = setInterval(() => {
+      if (alarmActive) navigator.vibrate([300, 200, 300]);
+    }, 1500);
+  }
+  document.getElementById('btnCancel').disabled = false;
+  document.getElementById('btnMain').textContent = 'Stop';
+  document.getElementById('btnMain').classList.add('running');
+}
+
+function dismissAlarm() {
+  stopAlarmSound();
+  document.getElementById('dispDisplay').textContent = '00:00';
+  document.getElementById('dispDisplay').classList.remove('done');
+  document.getElementById('status').textContent = 'Tap Start to run again';
+  resetControls();
+  updateUI();
+}
+
+function fmt(seconds) {
+  const m = Math.floor(Math.max(0, seconds) / 60);
+  const s = Math.floor(Math.max(0, seconds) % 60);
+  return String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+}
+
+function updateRing() {
+  const pct = displayTotal > 0 ? displayLeft / displayTotal : 0;
+  const offset = RING_LEN * (1 - Math.max(0, Math.min(1, pct)));
+  document.getElementById('ringProgress').style.strokeDashoffset = offset;
+}
+
+function updateUI() {
+  document.getElementById('dispDisplay').textContent = fmt(displayLeft);
+  document.getElementById('dispActual').textContent = fmt(actualLeft);
+  document.getElementById('dispSpeed').textContent = speed.toFixed(3) + 'x';
+  updateRing();
+}
+
+function togglePanel(force) {
+  const panel = document.getElementById('panel');
+  const overlay = document.getElementById('overlay');
+  const open = typeof force === 'boolean' ? force : !panel.classList.contains('open');
+  panel.classList.toggle('open', open);
+  overlay.classList.toggle('show', open);
+  if (open) {
+    setTimeout(() => document.getElementById('actualInput').focus(), 300);
+  }
+}
+
+function mainAction() {
+  if (alarmActive) { dismissAlarm(); return; }
+  if (!running) startTimer();
+  else if (paused) resumeTimer();
+  else pauseTimer();
+}
+
+function startTimer() {
+  stopAlarmSound();
+  if (running) return;
+  const actualMin = parseInt(document.getElementById('actualInput').value);
+  const displayMin = parseInt(document.getElementById('displayInput').value);
+  if (!actualMin || !displayMin || actualMin <= 0 || displayMin <= 0) {
+    togglePanel(true);
+    document.getElementById('status').textContent = 'Enter positive numbers';
+    return;
+  }
+  actualLeft = actualMin * 60;
+  displayLeft = displayMin * 60;
+  displayTotal = displayLeft;
+  speed = displayLeft / actualLeft;
+  running = true;
+  paused = false;
+  lastTime = performance.now();
+
+  document.getElementById('actualInput').disabled = true;
+  document.getElementById('displayInput').disabled = true;
+  document.getElementById('btnPlus').disabled = false;
+  document.getElementById('btnMinus').disabled = false;
+  document.getElementById('btnCancel').disabled = false;
+  document.getElementById('btnMain').textContent = 'Pause';
+  document.getElementById('btnMain').classList.add('running');
+  document.getElementById('dispDisplay').classList.remove('done');
+  document.getElementById('status').textContent = 'Running';
+  togglePanel(false);
+  initAudio();
+
+  tick();
+}
+
+function pauseTimer() {
+  if (!running || paused) return;
+  paused = true;
+  if (animId) cancelAnimationFrame(animId);
+  document.getElementById('btnMain').textContent = 'Resume';
+  document.getElementById('status').textContent = 'Paused';
+}
+
+function resumeTimer() {
+  if (!running || !paused) return;
+  paused = false;
+  lastTime = performance.now();
+  document.getElementById('btnMain').textContent = 'Pause';
+  document.getElementById('status').textContent = 'Running';
+  tick();
+}
+
+function tick() {
+  if (!running || paused) return;
+  const now = performance.now();
+  const dt = (now - lastTime) / 1000;
+  lastTime = now;
+
+  actualLeft -= dt;
+  displayLeft -= dt * speed;
+
+  if (actualLeft <= 0 || displayLeft <= 0) {
+    actualLeft = Math.max(0, actualLeft);
+    displayLeft = Math.max(0, displayLeft);
+    running = false;
+    paused = false;
+    document.getElementById('dispDisplay').textContent = 'Done';
+    document.getElementById('dispDisplay').classList.add('done');
+    document.getElementById('status').textContent = 'Complete — tap Stop or Cancel';
+    resetControls();
+    updateUI();
+    startAlarm();
+    return;
+  }
+
+  updateUI();
+  animId = requestAnimationFrame(tick);
+}
+
+function addTime() {
+  if (!running) return;
+  displayLeft += 60;
+  actualLeft += 120;
+  displayTotal += 60;
+  recalcSpeed();
+  document.getElementById('status').textContent = '[+] Speed: ' + speed.toFixed(3) + 'x';
+  updateUI();
+}
+
+function reduceTime() {
+  if (!running) return;
+  displayLeft = Math.max(0, displayLeft - 60);
+  recalcSpeed();
+  document.getElementById('status').textContent = '[−] Speed: ' + speed.toFixed(3) + 'x';
+  updateUI();
+}
+
+function recalcSpeed() {
+  if (actualLeft > 0) speed = displayLeft / actualLeft;
+}
+
+function cancelTimer() {
+  stopAlarmSound();
+  running = false;
+  paused = false;
+  if (animId) cancelAnimationFrame(animId);
+  displayLeft = 0;
+  actualLeft = 0;
+  displayTotal = 0;
+  speed = 1.0;
+  document.getElementById('dispDisplay').textContent = '00:00';
+  document.getElementById('dispDisplay').classList.remove('done');
+  document.getElementById('status').textContent = 'Cancelled';
+  resetControls();
+  updateUI();
+}
+
+function stopTimer() { cancelTimer(); }
+
+function resetControls() {
+  document.getElementById('actualInput').disabled = false;
+  document.getElementById('displayInput').disabled = false;
+  document.getElementById('btnPlus').disabled = true;
+  document.getElementById('btnMinus').disabled = true;
+  document.getElementById('btnCancel').disabled = true;
+  document.getElementById('btnMain').textContent = 'Start';
+  document.getElementById('btnMain').classList.remove('running');
+}
+
+updateUI();
+
+</script>
+</body>
+</html>

@@ -1,0 +1,11 @@
+{
+  "appId": "com.adjustablespeed.timer",
+  "appName": "Timer",
+  "webDir": "www",
+  "android": {
+    "allowMixedContent": true
+  },
+  "server": {
+    "androidScheme": "https"
+  }
+}

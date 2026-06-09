@@ -4,6 +4,12 @@ dist/
 *.spec
 *.exe
 *.zip
+*.apk
+android-app/android/local.properties
+android-app/android/.gradle/
+android-app/android/app/build/
+android-app/android/capacitor-cordova-android-plugins/build/
+android-app/node_modules/
 .DS_Store
 .vercel/
 UPWORK_MESSAGE.txt

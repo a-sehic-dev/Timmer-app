@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Timer</string>
+    <string name="title_activity_main">Timer</string>
+    <string name="package_name">com.adjustablespeed.timer</string>
+    <string name="custom_url_scheme">com.adjustablespeed.timer</string>
+</resources>
